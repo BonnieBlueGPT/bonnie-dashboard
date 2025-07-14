@@ -1,42 +1,118 @@
-/* Dashboard.css */
+/* BonnieDashboard.css */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f4f4f8;
+  color: #333;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
 .dashboard-container {
-  padding: 20px;
-  font-family: 'Arial', sans-serif;
-  background-color: #111;
-  color: #fff;
-  min-height: 100vh;
+  padding: 2rem;
+  max-width: 960px;
+  margin: auto;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  text-align: center;
 }
 
 .summary {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  font-size: 18px;
+  justify-content: space-around;
+  margin-bottom: 2rem;
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.summary p {
+  margin: 0;
+  background: #fff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 .log-table {
-  background-color: #1e1e1e;
-  padding: 16px;
+  background: #fff;
   border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  overflow-x: auto;
 }
 
-.log-table table {
+.log-table h2 {
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+  min-width: 720px;
 }
 
-.log-table th, .log-table td {
-  padding: 10px;
-  border: 1px solid #333;
+th, td {
   text-align: left;
-  font-size: 14px;
+  padding: 10px;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.log-table th {
-  background-color: #222;
+tr.bonnie-row {
+  background-color: #fff0f6;
 }
 
-.log-table tr:nth-child(even) {
-  background-color: #151515;
+td.message-cell {
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .summary {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .log-table {
+    padding: 0.5rem;
+  }
+
+  table {
+    min-width: 100%;
+    font-size: 0.85rem;
+  }
+
+  th, td {
+    padding: 8px;
+  }
+}
+
+/* Dark mode support */
+body.dark {
+  background-color: #1e1e1e;
+  color: #f5f5f5;
+}
+
+body.dark .log-table,
+body.dark .summary p {
+  background-color: #2a2a2a;
+  color: #eee;
+  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.05);
+}
+
+body.dark tr.bonnie-row {
+  background-color: #442233;
+}
+
+body.dark th,
+body.dark td {
+  border-color: #333;
 }
