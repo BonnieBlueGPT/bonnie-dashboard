@@ -1,7 +1,7 @@
-// BonnieDashboard.jsx — updated with LiveStats panel
-import React, { useEffect, useState } from 'react';
+// BonnieDashboard.jsx — Real-Time Mobile Dashboard
+import React, { useEffect, useState, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import LiveStats from './components/LiveStats';
+import { FiUser, FiMessageCircle, FiSun, FiMoon, FiSettings, FiActivity } from 'react-icons/fi';
 import './BonnieDashboard.css';
 
 const supabase = createClient(
@@ -9,112 +9,113 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
-const BonnieDashboard = () => {
+export default function BonnieDashboard() {
   const [logs, setLogs] = useState([]);
-  const [search, setSearch] = useState('');
+  const [stats, setStats] = useState({ users: 0, messages: 0, longest: 0, newUsers: 0 });
   const [dark, setDark] = useState(true);
-
-  const [stats, setStats] = useState({
-    activeUsers: 0,
-    messagesToday: 0,
-    longestSession: 0,
-    newUsers: 0
-  });
+  const [bonnieOnline, setBonnieOnline] = useState(false);
+  const endRef = useRef();
 
   useEffect(() => {
     const fetchStats = async () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const isoToday = today.toISOString();
 
-      const { data: messages, error: msgError } = await supabase
+      const { data: messages } = await supabase
         .from('bonnie_logs')
         .select('*')
-        .gte('created_at', isoToday)
-        .order('created_at', { ascending: false });
+        .gte('timestamp', today.toISOString())
+        .order('timestamp', { ascending: false });
 
-      const { data: users, error: userError } = await supabase
-        .from('users')
-        .select('session_id, created_at');
+      const { data: users } = await supabase.from('users').select('*');
 
-      if (msgError || userError) return console.error('❌ Fetch error:', msgError || userError);
+      setLogs(messages.slice(0, 50));
+      const grouped = messages.reduce((acc, m) => {
+        if (!acc[m.session_id]) acc[m.session_id] = [];
+        acc[m.session_id].push(new Date(m.timestamp));
+        return acc;
+      }, {});
 
-      setLogs(messages);
-
-      const sessions = {};
-      messages.forEach(m => {
-        if (!sessions[m.session_id]) sessions[m.session_id] = [];
-        sessions[m.session_id].push(new Date(m.created_at));
-      });
-
-      const sessionDurations = Object.values(sessions).map(times => {
+      const durations = Object.values(grouped).map(times => {
         const sorted = times.sort((a, b) => a - b);
-        const diff = (sorted[sorted.length - 1] - sorted[0]) / 1000 / 60;
-        return Math.round(diff);
+        return (sorted[sorted.length - 1] - sorted[0]) / 60000;
       });
 
-      const activeUsers = new Set(messages.map(m => m.session_id)).size;
-      const messagesToday = messages.length;
-      const longestSession = Math.max(...sessionDurations, 0);
-      const newUsers = users.filter(u => new Date(u.created_at) > today).length;
+      setStats({
+        users: Object.keys(grouped).length,
+        messages: messages.length,
+        longest: Math.round(Math.max(...durations, 0)),
+        newUsers: users.filter(u => new Date(u.created_at) > today).length
+      });
 
-      setStats({ activeUsers, messagesToday, longestSession, newUsers });
+      // Check Bonnie online status
+      const lastBonnie = messages.find(m => m.sender.toLowerCase() === 'bonnie');
+      const isOnline = lastBonnie && new Date() - new Date(lastBonnie.timestamp) < 5 * 60000;
+      setBonnieOnline(isOnline);
     };
 
     fetchStats();
-    const interval = setInterval(fetchStats, 10000);
+    const interval = setInterval(fetchStats, 8000);
     return () => clearInterval(interval);
   }, []);
 
-  const filtered = logs.filter(
-    log =>
-      log.session_id.toLowerCase().includes(search.toLowerCase()) ||
-      log.message?.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [logs]);
 
   return (
     <div className={`dashboard ${dark ? 'dark' : 'light'}`}>
-      <header>
-        <h1>💬 Bonnie Dashboard</h1>
-        <button onClick={() => setDark(!dark)}>
-          {dark ? '☀️ Light' : '🌙 Dark'} Mode
+      <header className="sticky top-0 z-10 bg-white dark:bg-black px-4 py-3 flex items-center justify-between border-b">
+        <div className="flex items-center gap-3">
+          <div className={`w-3 h-3 rounded-full ${bonnieOnline ? 'bg-green-400 animate-pulse' : 'bg-gray-400'}`} />
+          <h1 className="text-lg font-bold">Bonnie Dashboard</h1>
+        </div>
+        <button onClick={() => setDark(d => !d)} className="text-xl">
+          {dark ? <FiSun /> : <FiMoon />}
         </button>
       </header>
 
-      <LiveStats stats={stats} />
+      <section className="p-4 space-y-4">
+        <div className="grid grid-cols-2 gap-4 text-sm font-medium">
+          <Stat icon={<FiUser />} label="Active Users" value={stats.users} />
+          <Stat icon={<FiMessageCircle />} label="Messages" value={stats.messages} />
+          <Stat icon={<FiActivity />} label="Longest Session" value={`${stats.longest} min`} />
+          <Stat icon={<FiUser />} label="New Users" value={stats.newUsers} />
+        </div>
 
-      <input
-        className="search"
-        type="text"
-        placeholder="Search messages or session ID..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-      />
+        <div className="bg-white dark:bg-zinc-900 rounded-xl p-3 shadow overflow-y-auto max-h-[60vh] text-sm">
+          {logs.map((log, i) => (
+            <div key={i} className="mb-2">
+              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                <span>{log.sender}</span>
+                <span>{new Date(log.timestamp).toLocaleTimeString()}</span>
+              </div>
+              <div className={`p-2 rounded-md ${log.sender === 'Bonnie' ? 'bg-pink-100 dark:bg-pink-900' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
+                {log.message || '—'}
+              </div>
+            </div>
+          ))}
+          <div ref={endRef} />
+        </div>
+      </section>
 
-      <div className="log-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>Sender</th>
-              <th>Session</th>
-              <th>Message</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((log, i) => (
-              <tr key={i} className={log.sender === 'Bonnie' ? 'bonnie-row' : ''}>
-                <td>{new Date(log.created_at).toLocaleTimeString()}</td>
-                <td>{log.sender}</td>
-                <td>{log.session_id}</td>
-                <td className="message-cell">{log.message || '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <nav className="fixed bottom-0 w-full bg-white dark:bg-black border-t flex justify-around py-2 text-xl">
+        <button className="text-pink-500"><FiActivity /></button>
+        <button className="text-gray-500"><FiMessageCircle /></button>
+        <button className="text-gray-500"><FiSettings /></button>
+      </nav>
+    </div>
+  );
+}
+
+function Stat({ icon, label, value }) {
+  return (
+    <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 p-3 rounded-lg">
+      <span className="text-pink-500">{icon}</span>
+      <div>
+        <div className="text-xs">{label}</div>
+        <div className="text-lg font-semibold">{value}</div>
       </div>
     </div>
   );
-};
-
-export default BonnieDashboard;
+}
