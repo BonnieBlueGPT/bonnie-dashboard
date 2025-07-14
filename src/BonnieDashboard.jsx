@@ -11,7 +11,7 @@ export default function BonnieDashboard() {
   const [uniqueUsersToday, setUniqueUsersToday] = useState(0);
   const [activeSessions, setActiveSessions] = useState([]);
   const [chatDuration, setChatDuration] = useState(0);
-  const [isOnline, setIsOnline] = useState(true); // assumed always online unless backend toggled
+  const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -19,12 +19,12 @@ export default function BonnieDashboard() {
       startOfDay.setUTCHours(0, 0, 0, 0);
 
       const { data, error } = await supabase
-        .from("bonnie_memory")
+        .from("bonnie_logs")
         .select("session_id, sender, created_at")
         .gte("created_at", startOfDay.toISOString());
 
       if (error) {
-        console.error("Error fetching stats:", error);
+        console.error("Error fetching logs:", error);
         return;
       }
 
@@ -42,7 +42,7 @@ export default function BonnieDashboard() {
         const now = new Date();
         const lastMsg = new Date(latest.created_at);
         const timeDiff = (now - lastMsg) / 1000;
-        const isActive = timeDiff < 600; // 10 minutes
+        const isActive = timeDiff < 600;
         console.log(`🔍 Checking session: ${latest.session_id}`);
         console.log(`🕒 Last message: ${lastMsg.toISOString()}`);
         console.log(`⏱️ Seconds since last message: ${timeDiff}`);
@@ -57,7 +57,7 @@ export default function BonnieDashboard() {
           data.filter((msg) => msg.session_id === active[0].sessionId)[0].created_at
         );
         const now = new Date();
-        const duration = Math.floor((now - start) / 60000); // in minutes
+        const duration = Math.floor((now - start) / 60000);
         setChatDuration(duration);
       } else {
         setChatDuration(0);
@@ -65,7 +65,7 @@ export default function BonnieDashboard() {
     };
 
     fetchStats();
-    const interval = setInterval(fetchStats, 10000); // update every 10s
+    const interval = setInterval(fetchStats, 10000);
     return () => clearInterval(interval);
   }, []);
 
