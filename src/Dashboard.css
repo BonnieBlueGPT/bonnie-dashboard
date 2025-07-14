@@ -1,0 +1,42 @@
+/* Dashboard.css */
+.dashboard-container {
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  background-color: #111;
+  color: #fff;
+  min-height: 100vh;
+}
+
+.summary {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.log-table {
+  background-color: #1e1e1e;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.log-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.log-table th, .log-table td {
+  padding: 10px;
+  border: 1px solid #333;
+  text-align: left;
+  font-size: 14px;
+}
+
+.log-table th {
+  background-color: #222;
+}
+
+.log-table tr:nth-child(even) {
+  background-color: #151515;
+}
