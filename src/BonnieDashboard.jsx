@@ -11,7 +11,7 @@ export default function BonnieDashboard() {
   const [uniqueUsersToday, setUniqueUsersToday] = useState(0);
   const [activeSessions, setActiveSessions] = useState([]);
   const [chatDuration, setChatDuration] = useState(0);
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(false); // Now correctly initialized as false
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -24,10 +24,11 @@ export default function BonnieDashboard() {
         .gte("created_at", startOfDay.toISOString());
 
       if (error) {
-        console.error("Error fetching logs:", error);
+        console.error("❌ Error fetching logs:", error);
         return;
       }
 
+      console.log(`📊 Total messages fetched: ${data.length}`);
       setMessagesToday(data.length);
 
       const sessions = [...new Set(data.map((row) => row.session_id))];
@@ -43,19 +44,18 @@ export default function BonnieDashboard() {
         const lastMsg = new Date(latest.created_at);
         const timeDiff = (now - lastMsg) / 1000;
         const isActive = timeDiff < 600;
-        console.log(`🔍 Checking session: ${latest.session_id}`);
-        console.log(`🕒 Last message: ${lastMsg.toISOString()}`);
-        console.log(`⏱️ Seconds since last message: ${timeDiff}`);
+        console.log(`🔍 Session: ${latest.session_id}`);
+        console.log(`⏱️ Last message: ${lastMsg.toISOString()} (${Math.floor(timeDiff)}s ago)`);
         console.log(`✅ Active: ${isActive}`);
         return isActive;
       });
 
       setActiveSessions(active);
+      setIsOnline(active.length > 0); // ✅ FIXED: update isOnline based on activity
 
       if (active.length > 0) {
-        const start = new Date(
-          data.filter((msg) => msg.session_id === active[0].sessionId)[0].created_at
-        );
+        const sessionMsgs = data.filter((msg) => msg.session_id === active[0].sessionId);
+        const start = new Date(sessionMsgs[0].created_at);
         const now = new Date();
         const duration = Math.floor((now - start) / 60000);
         setChatDuration(duration);
@@ -72,14 +72,18 @@ export default function BonnieDashboard() {
   return (
     <div style={styles.container}>
       <h2 style={styles.header}>Bonnie Activity</h2>
+
       <div style={styles.card}>
-        <span style={styles.greenDot} /> Bonnie is {isOnline ? "online" : "offline"}
+        <span style={isOnline ? styles.greenDot : styles.redDot} />
+        Bonnie is {isOnline ? "online" : "offline"}
       </div>
+
       <div style={styles.card}>
         💬 {activeSessions.length > 0
           ? `${activeSessions.length} active session${activeSessions.length > 1 ? "s" : ""} now`
           : "No one talking to Bonnie"}
       </div>
+
       <div style={styles.grid}>
         <div style={styles.miniCard}>
           ❤️ People talked to Bonnie today: <strong>{uniqueUsersToday}</strong>
@@ -88,8 +92,11 @@ export default function BonnieDashboard() {
           ✉️ Messages sent: <strong>{messagesToday}</strong>
         </div>
       </div>
+
       <div style={styles.card}>
-        🕒 Current chat: {chatDuration > 0 ? `${chatDuration} minute${chatDuration !== 1 ? "s" : ""} long` : "None"}
+        🕒 Current chat: {chatDuration > 0
+          ? `${chatDuration} minute${chatDuration !== 1 ? "s" : ""} long`
+          : "None"}
       </div>
     </div>
   );
@@ -134,6 +141,14 @@ const styles = {
     width: "10px",
     height: "10px",
     backgroundColor: "#4CAF50",
+    borderRadius: "50%",
+    marginRight: "10px",
+  },
+  redDot: {
+    display: "inline-block",
+    width: "10px",
+    height: "10px",
+    backgroundColor: "#f44336",
     borderRadius: "50%",
     marginRight: "10px",
   },
