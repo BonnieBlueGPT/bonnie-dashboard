@@ -1,6 +1,7 @@
-// BonnieDashboard.jsx — GOD UPGRADE VERSION
+// BonnieDashboard.jsx — updated with LiveStats panel
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import LiveStats from './components/LiveStats';
 import './BonnieDashboard.css';
 
 const supabase = createClient(
@@ -10,32 +11,58 @@ const supabase = createClient(
 
 const BonnieDashboard = () => {
   const [logs, setLogs] = useState([]);
-  const [uniqueUsers, setUniqueUsers] = useState(0);
-  const [totalMessages, setTotalMessages] = useState(0);
   const [search, setSearch] = useState('');
   const [dark, setDark] = useState(true);
 
+  const [stats, setStats] = useState({
+    activeUsers: 0,
+    messagesToday: 0,
+    longestSession: 0,
+    newUsers: 0
+  });
+
   useEffect(() => {
-    const fetchLogs = async () => {
+    const fetchStats = async () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const isoToday = today.toISOString();
 
-      const { data, error } = await supabase
+      const { data: messages, error: msgError } = await supabase
         .from('bonnie_logs')
         .select('*')
         .gte('created_at', isoToday)
         .order('created_at', { ascending: false });
 
-      if (error) return console.error('❌ Fetch error:', error);
+      const { data: users, error: userError } = await supabase
+        .from('users')
+        .select('session_id, created_at');
 
-      setLogs(data);
-      setUniqueUsers(new Set(data.map(log => log.session_id)).size);
-      setTotalMessages(data.length);
+      if (msgError || userError) return console.error('❌ Fetch error:', msgError || userError);
+
+      setLogs(messages);
+
+      const sessions = {};
+      messages.forEach(m => {
+        if (!sessions[m.session_id]) sessions[m.session_id] = [];
+        sessions[m.session_id].push(new Date(m.created_at));
+      });
+
+      const sessionDurations = Object.values(sessions).map(times => {
+        const sorted = times.sort((a, b) => a - b);
+        const diff = (sorted[sorted.length - 1] - sorted[0]) / 1000 / 60;
+        return Math.round(diff);
+      });
+
+      const activeUsers = new Set(messages.map(m => m.session_id)).size;
+      const messagesToday = messages.length;
+      const longestSession = Math.max(...sessionDurations, 0);
+      const newUsers = users.filter(u => new Date(u.created_at) > today).length;
+
+      setStats({ activeUsers, messagesToday, longestSession, newUsers });
     };
 
-    fetchLogs();
-    const interval = setInterval(fetchLogs, 10000);
+    fetchStats();
+    const interval = setInterval(fetchStats, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -54,10 +81,7 @@ const BonnieDashboard = () => {
         </button>
       </header>
 
-      <section className="stats">
-        <div className="card pink"><strong>👤 Users:</strong> {uniqueUsers}</div>
-        <div className="card blue"><strong>💌 Messages:</strong> {totalMessages}</div>
-      </section>
+      <LiveStats stats={stats} />
 
       <input
         className="search"
@@ -79,11 +103,11 @@ const BonnieDashboard = () => {
           </thead>
           <tbody>
             {filtered.map((log, i) => (
-              <tr key={i} className={log.sender === 'Bonnie' ? 'bonnie' : 'user'}>
+              <tr key={i} className={log.sender === 'Bonnie' ? 'bonnie-row' : ''}>
                 <td>{new Date(log.created_at).toLocaleTimeString()}</td>
                 <td>{log.sender}</td>
                 <td>{log.session_id}</td>
-                <td>{log.message || '—'}</td>
+                <td className="message-cell">{log.message || '—'}</td>
               </tr>
             ))}
           </tbody>
