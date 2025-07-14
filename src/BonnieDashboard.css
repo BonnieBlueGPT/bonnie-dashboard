@@ -1,118 +1,89 @@
-/* BonnieDashboard.css */
-body {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background-color: #f4f4f8;
-  color: #333;
-  transition: background 0.3s ease, color 0.3s ease;
-}
-
 .dashboard-container {
   padding: 2rem;
-  max-width: 960px;
+  font-family: 'Segoe UI', sans-serif;
+  max-width: 900px;
   margin: auto;
 }
 
 h1 {
-  font-size: 2rem;
+  font-size: 1.8rem;
   margin-bottom: 1rem;
-  text-align: center;
 }
 
 .summary {
   display: flex;
-  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 1rem;
   margin-bottom: 2rem;
-  font-weight: 500;
-  font-size: 1.1rem;
 }
 
 .summary p {
-  margin: 0;
-  background: #fff;
-  padding: 12px 20px;
+  flex: 1;
+  min-width: 140px;
+  background: #f5f5f5;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .log-table {
-  background: #fff;
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
   overflow-x: auto;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .log-table h2 {
+  font-size: 1.3rem;
   margin-bottom: 1rem;
-  font-size: 1.2rem;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 0.5rem;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 720px;
+  min-width: 600px;
 }
 
-th, td {
+th,
+td {
   text-align: left;
-  padding: 10px;
-  font-size: 0.9rem;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  border-bottom: 1px solid #ddd;
 }
 
-tr.bonnie-row {
-  background-color: #fff0f6;
+th {
+  background-color: #f2f2f2;
+  font-weight: 600;
 }
 
-td.message-cell {
-  max-width: 320px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+tr:hover {
+  background-color: #f9f9f9;
 }
 
-@media (max-width: 768px) {
-  .summary {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: center;
+@media (max-width: 600px) {
+  .dashboard-container {
+    padding: 1rem;
   }
 
-  .log-table {
-    padding: 0.5rem;
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  .summary p {
+    font-size: 0.9rem;
+    padding: 0.75rem;
   }
 
   table {
-    min-width: 100%;
     font-size: 0.85rem;
   }
 
-  th, td {
-    padding: 8px;
+  th,
+  td {
+    padding: 0.5rem;
   }
-}
-
-/* Dark mode support */
-body.dark {
-  background-color: #1e1e1e;
-  color: #f5f5f5;
-}
-
-body.dark .log-table,
-body.dark .summary p {
-  background-color: #2a2a2a;
-  color: #eee;
-  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.05);
-}
-
-body.dark tr.bonnie-row {
-  background-color: #442233;
-}
-
-body.dark th,
-body.dark td {
-  border-color: #333;
 }
