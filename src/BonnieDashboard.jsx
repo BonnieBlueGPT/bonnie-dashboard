@@ -41,7 +41,13 @@ export default function BonnieDashboard() {
       const active = latestPerSession.filter(({ latest }) => {
         const now = new Date();
         const lastMsg = new Date(latest.created_at);
-        return (now - lastMsg) / 1000 < 300; // active if < 5 min ago
+        const timeDiff = (now - lastMsg) / 1000;
+        const isActive = timeDiff < 600; // 10 minutes
+        console.log(`🔍 Checking session: ${latest.session_id}`);
+        console.log(`🕒 Last message: ${lastMsg.toISOString()}`);
+        console.log(`⏱️ Seconds since last message: ${timeDiff}`);
+        console.log(`✅ Active: ${isActive}`);
+        return isActive;
       });
 
       setActiveSessions(active);
