@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   "https://iplbsbhaiyyugutmddpr.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwbGJzYmhhaXl5dWd1dG1kZHByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyMjQ0MTYsImV4cCI6MjA2NzgwMDQxNn0.ezDIsmf12mxj6dTNi5WOXUSFtwsxDsy0rmaVjKuuB34"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwbGJzYmhhaXl5dWd1bG1kZHByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyMjQ0MTYsImV4cCI6MjA2NzgwMDQxNn0.ezDIsmf12mxj6dTNi5WOXUSFtwsxDsy0rmaVjKuuB34"
 );
 
 export default function BonnieDashboard() {
@@ -11,12 +11,12 @@ export default function BonnieDashboard() {
   const [uniqueUsersToday, setUniqueUsersToday] = useState(0);
   const [activeSessions, setActiveSessions] = useState([]);
   const [chatDuration, setChatDuration] = useState(0);
-  const [isOnline, setIsOnline] = useState(false); // Now correctly initialized as false
+  const [isOnline, setIsOnline] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
-      const startOfDay = new Date();
-      startOfDay.setUTCHours(0, 0, 0, 0);
+      const now = new Date();
+      const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
       const { data, error } = await supabase
         .from("bonnie_logs")
@@ -28,35 +28,41 @@ export default function BonnieDashboard() {
         return;
       }
 
-      console.log(`📊 Total messages fetched: ${data.length}`);
+      console.log(`📥 Logs received: ${data.length}`);
+      if (data.length > 0) {
+        console.log("📚 Sample log:", data[0]);
+      }
+
       setMessagesToday(data.length);
 
       const sessions = [...new Set(data.map((row) => row.session_id))];
       setUniqueUsersToday(sessions.length);
 
       const latestPerSession = sessions.map((sessionId) => {
-        const messages = data.filter((msg) => msg.session_id === sessionId);
-        return { sessionId, latest: messages[messages.length - 1] };
+        const messages = data
+          .filter((msg) => msg.session_id === sessionId)
+          .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        return { sessionId, latest: messages[messages.length - 1], first: messages[0] };
       });
 
       const active = latestPerSession.filter(({ latest }) => {
-        const now = new Date();
-        const lastMsg = new Date(latest.created_at);
-        const timeDiff = (now - lastMsg) / 1000;
-        const isActive = timeDiff < 600;
-        console.log(`🔍 Session: ${latest.session_id}`);
-        console.log(`⏱️ Last message: ${lastMsg.toISOString()} (${Math.floor(timeDiff)}s ago)`);
-        console.log(`✅ Active: ${isActive}`);
+        const lastMsgTime = new Date(latest.created_at);
+        const secondsSince = (now - lastMsgTime) / 1000;
+        const isActive = secondsSince < 600;
+
+        console.log(`🧠 Session ${latest.sessionId}:`);
+        console.log(`→ Last message: ${lastMsgTime.toISOString()}`);
+        console.log(`→ Seconds since: ${secondsSince}`);
+        console.log(`→ Active: ${isActive}`);
+
         return isActive;
       });
 
       setActiveSessions(active);
-      setIsOnline(active.length > 0); // ✅ FIXED: update isOnline based on activity
+      setIsOnline(active.length > 0);
 
       if (active.length > 0) {
-        const sessionMsgs = data.filter((msg) => msg.session_id === active[0].sessionId);
-        const start = new Date(sessionMsgs[0].created_at);
-        const now = new Date();
+        const start = new Date(active[0].first.created_at);
         const duration = Math.floor((now - start) / 60000);
         setChatDuration(duration);
       } else {
@@ -72,18 +78,15 @@ export default function BonnieDashboard() {
   return (
     <div style={styles.container}>
       <h2 style={styles.header}>Bonnie Activity</h2>
-
       <div style={styles.card}>
         <span style={isOnline ? styles.greenDot : styles.redDot} />
         Bonnie is {isOnline ? "online" : "offline"}
       </div>
-
       <div style={styles.card}>
         💬 {activeSessions.length > 0
           ? `${activeSessions.length} active session${activeSessions.length > 1 ? "s" : ""} now`
           : "No one talking to Bonnie"}
       </div>
-
       <div style={styles.grid}>
         <div style={styles.miniCard}>
           ❤️ People talked to Bonnie today: <strong>{uniqueUsersToday}</strong>
@@ -92,11 +95,8 @@ export default function BonnieDashboard() {
           ✉️ Messages sent: <strong>{messagesToday}</strong>
         </div>
       </div>
-
       <div style={styles.card}>
-        🕒 Current chat: {chatDuration > 0
-          ? `${chatDuration} minute${chatDuration !== 1 ? "s" : ""} long`
-          : "None"}
+        🕒 Current chat: {chatDuration > 0 ? `${chatDuration} minute${chatDuration !== 1 ? "s" : ""} long` : "None"}
       </div>
     </div>
   );
@@ -148,7 +148,7 @@ const styles = {
     display: "inline-block",
     width: "10px",
     height: "10px",
-    backgroundColor: "#f44336",
+    backgroundColor: "#e53935",
     borderRadius: "50%",
     marginRight: "10px",
   },
