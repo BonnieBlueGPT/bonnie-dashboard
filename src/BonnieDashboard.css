@@ -1,133 +1,40 @@
-/* --- MASTER BONNIE DASHBOARD STYLES --- */
-
-body {
-  margin: 0;
+.dashboard.bonnie-theme {
+  padding: 2rem;
   font-family: 'Segoe UI', sans-serif;
-  background: #fff;
-  color: #1a1a1a;
+  background: #fff0f6;
+  color: #880e4f;
+  min-height: 100vh;
+  text-align: center;
 }
 
-.dashboard-container {
-  padding: 2rem 1rem;
-  max-width: 960px;
-  margin: 0 auto;
-}
-
-h1 {
+.dashboard h1 {
   font-size: 2rem;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.mode-toggle {
-  margin-bottom: 1rem;
-}
-
-.summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: space-between;
+  color: #e91e63;
   margin-bottom: 2rem;
 }
 
-.summary-card {
-  flex: 1 1 200px;
-  background: #f9f9f9;
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+.stats {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 1rem;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 360px;
+  margin: 0 auto;
 }
 
-.summary-card i {
-  font-size: 1.2rem;
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
 }
 
-.search {
-  width: 100%;
-  max-width: 400px;
-  margin: 0 auto 1.5rem;
-  padding: 0.6rem 1rem;
-  font-size: 1rem;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  display: block;
+.card h2 {
+  margin-bottom: 0.5rem;
+  color: #e91e63;
 }
 
-.log-table {
-  overflow-x: auto;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-  padding: 1rem;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 720px;
-}
-
-th,
-td {
-  text-align: left;
-  padding: 12px 10px;
-  border-bottom: 1px solid #eee;
-  font-size: 0.95rem;
-}
-
-th {
-  background: #f2f2f2;
+.card p {
+  font-size: 1.25rem;
   font-weight: 600;
-}
-
-tr:hover {
-  background: #fafafa;
-}
-
-/* Bonnie message highlight */
-tr.bonnie {
-  background-color: #fff1f8;
-}
-
-/* MOBILE FIXES */
-@media (max-width: 640px) {
-  .dashboard-container {
-    padding: 1rem;
-  }
-
-  h1 {
-    font-size: 1.5rem;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .summary {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .summary-card {
-    flex: 1 1 100%;
-  }
-
-  table {
-    font-size: 0.85rem;
-  }
-
-  th,
-  td {
-    padding: 10px 6px;
-  }
-
-  .search {
-    width: 100%;
-    font-size: 0.95rem;
-  }
 }
